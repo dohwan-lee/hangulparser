@@ -1,0 +1,56 @@
+package com.snaps.data.enums.process;
+
+import org.apache.commons.lang.StringUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public enum RenderStatusName {
+
+    다운시작("1"),
+    다운종료("2"),
+    다운오류("A"),
+    렌더시작("3"),
+    렌더종료("4"),
+    렌더오류("B"),
+    PDF다운시작("5"),
+    PDF다운종료("6"),
+    PDF다운오류("C"),
+    없음("");
+
+    RenderStatusName(String value ) {
+        this.value = value;
+    }
+
+    private final String value;
+
+    public String getValue() {
+        return this.value;
+    }
+
+    private static final Map<String, RenderStatusName> typeMap;
+    static {
+        typeMap = new HashMap<String, RenderStatusName>();
+        RenderStatusName[] processIndexNames = RenderStatusName.values();
+        for (RenderStatusName indexName : processIndexNames) {
+            typeMap.put(indexName.getValue(), indexName);
+        }
+    }
+
+    public static RenderStatusName getName(String value) {
+        return typeMap.get(value) == null ? 없음 : typeMap.get(value);
+    }
+
+    public static List<RenderStatusName> getIndexAllList() {
+        List<RenderStatusName> indexList = new ArrayList<RenderStatusName>();
+        RenderStatusName[] processIndexNames = RenderStatusName.values();
+        for(RenderStatusName indexName : processIndexNames){
+            if(!indexName.getValue().equals(StringUtils.EMPTY))
+                indexList.add(indexName);
+        }
+        return indexList;
+    }
+
+}
