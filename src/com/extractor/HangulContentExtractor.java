@@ -22,6 +22,9 @@ import com.ibm.watson.language_translator.v3.util.Language;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.subtlelib.poi.api.sheet.SheetContext;
 import org.subtlelib.poi.api.workbook.WorkbookContext;
 import org.subtlelib.poi.impl.workbook.WorkbookContextFactory;
@@ -84,7 +87,7 @@ public class HangulContentExtractor {
                 .skipCell()
                 .header("파일 경로").setColumnWidth(80).setRowHeight(28)
                 .header("파일명").setColumnWidth(50)
-                .header("위치").setColumnWidth(10)
+                .header("위치(Line)").setColumnWidth(10)
                 .header("시작 위치").setColumnWidth(5)
                 .header("종료 위치").setColumnWidth(5)
                 .header("추출 문자열").setColumnWidth(70)
@@ -94,8 +97,12 @@ public class HangulContentExtractor {
 
 
 		// arg로 받을 param
-        //String isDir = "/Users/joseph/projects_all/ohprint-backoffice";
-        String isDir = "e:/devGits/ohprintme/ohprint-backoffice";
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-backoffice";
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-analytics";
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-ground-api";   // 아무 것도 없음
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-framework";       // 아무 것도 없음
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-batch";
+        String isDir = "/Users/joseph/project_jp_all/ohprint-service-api";
 
         // 하위 디렉토리 
         for (File info : new File(isDir).listFiles()) {
@@ -125,9 +132,18 @@ public class HangulContentExtractor {
 
             if (strs.length > 1) {
 
-                if (((strs[1].contains("jsp") || strs[1].contains("properties")) && !strs[0].contains("target"))) {
+                if (((strs[1].contains("jsp") || strs[1].contains("properties") || strs[1].contains("java")) && !strs[0].contains("target"))) {
                     System.out.println("**************************************************************************");
                     System.out.println("| 파일명 : " + info.getAbsoluteFile());
+                    System.out.println("| 파일명 : " + info.getName());
+
+                    if("eventCondition.properties".equals(info.getName())) {    // ignore파일
+                        continue;
+                    }
+
+                    if(info.getAbsolutePath().contains("target") || info.getAbsolutePath().contains("test")) {
+                        continue;
+                    }
 
                     List<FileInfo> findHangulList = KoreanFinder.findHangul(info.getAbsoluteFile());
 
@@ -176,12 +192,26 @@ public class HangulContentExtractor {
 				+ new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
 				+".xlsx"));
 
+        int rowNum = sheetCtx.getNativeSheet().getLastRowNum();
+        for(int rowCnt = 0 ; rowNum < rowCnt; rowNum++) {
+            Row row = sheetCtx.getNativeSheet().getRow(rowCnt);
+            SXSSFRow.CellIterator cell = (SXSSFRow.CellIterator) row.cellIterator();
+            while(cell.hasNext()) {
+               Cell rowCell = cell.next();
+               System.out.print(rowCell.getDateCellValue());
+            }
+            System.out.println();
+        }
+
+
         // 하위의 모든 디렉토리
         for (File info : FileUtils.listFilesAndDirs(new File(isDir), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE)) {
             if (info.isDirectory()) {
                 //System.out.println(info.getName());
             }
         }
+
+
 
 
     }
@@ -290,7 +320,7 @@ public class HangulContentExtractor {
     /**
      * https://glosbe.com/a-api
      *
-     * @param transTxt
+     * @param paramTxt
      * @return
      */
     public static String gloseTranslate(String paramTxt) {
