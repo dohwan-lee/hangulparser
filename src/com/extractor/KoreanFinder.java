@@ -44,21 +44,30 @@ public class KoreanFinder {
                 int endPos = 0;
                 int startPos = 0;
 
-                if(line.contains("/*")) {      // ignore st
+                if((line.contains("/*") && line.contains("*/"))) {      // ignore st
+                    ignoreBuf = "";
+                    continue;
+                } else if(line.contains("/*")) {
                     ignoreBuf = "/*";
                 } else if(line.contains("*/")) {
                     ignoreBuf = "";
                     continue;
                 }
 
-                if(line.contains("<!--")) {     // ignore st
+                if((line.contains("<!--") && line.contains("-->"))) {     // ignore st
+                    ignoreBuf = "";
+                    continue;
+                } else if(line.contains("<!--")) {     // ignore st
                     ignoreBuf = "<!--";
                 } else if(line.contains("-->")) {
                     ignoreBuf = "";
                     continue;
                 }
 
-                if(line.contains("<%--")) {     // ignore st
+                if((line.contains("<%--") && line.contains("-->"))) {     // ignore st
+                    ignoreBuf = "";
+                    continue;
+                } else if(line.contains("<%--")) {
                     ignoreBuf = "<%--";
                 } else if(line.contains("-->")) {
                     ignoreBuf = "";

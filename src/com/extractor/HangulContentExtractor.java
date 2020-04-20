@@ -1,15 +1,6 @@
 package com.extractor;
 
-import java.io.*;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
+import com.google.common.io.Files;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.ibm.cloud.sdk.core.security.Authenticator;
@@ -29,7 +20,17 @@ import org.subtlelib.poi.api.sheet.SheetContext;
 import org.subtlelib.poi.api.workbook.WorkbookContext;
 import org.subtlelib.poi.impl.workbook.WorkbookContextFactory;
 
-import com.google.common.io.Files;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class HangulContentExtractor {
 
@@ -129,19 +130,22 @@ public class HangulContentExtractor {
         // 하위의 모든 파일
         for (File info : FileUtils.listFiles(new File(isDir), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE)) {
             String[] strs = info.getName().split("\\.");
+            String path = info.getAbsolutePath();
+            if(path.contains("target")
+                    || path.contains("IBChart")
+                    || path.contains("test")
+                    || path.contains("IBSheet")) {
+                continue;
+            }
 
             if (strs.length > 1) {
 
-                if (((strs[1].contains("jsp") || strs[1].contains("properties") || strs[1].contains("java")) && !strs[0].contains("target"))) {
+                if (((/*strs[1].contains("jsp") || strs[1].contains("properties") || strs[1].contains("java") || */strs[1].contains("xml")) || strs[1].contains("html"))) {
                     System.out.println("**************************************************************************");
                     System.out.println("| 파일명 : " + info.getAbsoluteFile());
                     System.out.println("| 파일명 : " + info.getName());
 
                     if("eventCondition.properties".equals(info.getName())) {    // ignore파일
-                        continue;
-                    }
-
-                    if(info.getAbsolutePath().contains("target") || info.getAbsolutePath().contains("test")) {
                         continue;
                     }
 
@@ -211,10 +215,25 @@ public class HangulContentExtractor {
             }
         }
 
+    }
 
-
+    /**
+     * xlsx 파일의 line, starPos, endPos 읽고
+     * 해당 파일을 찾고, *.jsp 라면
+     * 해당 파일의 값의 위치를 찾는다.
+     * <spring:message code="propkey" text="default text" />
+     *
+     * 파일이 *.java라면
+     * messageSource.getMessage("propkey", null, locale) 을 사용한다
+     *
+     *
+     *  https://offbyone.tistory.com/24 참조
+     */
+    public static void writeProperties() {
 
     }
+
+
 
     public static String naverTranslate(String transStr, JsonParser parser) {
         String transTxt = "";
