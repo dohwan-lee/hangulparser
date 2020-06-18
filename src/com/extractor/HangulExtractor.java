@@ -16,7 +16,7 @@ import org.apache.commons.io.FileUtils;
 public class HangulExtractor {
 	public static void main(String[] args) throws FileNotFoundException {
 		System.out.println("테스트");
-		
+		// HAN-1 refactoring class #1
 		Pattern pattern = Pattern.compile("(?=((?<!(\\*.{0,100}))([가-힣ㄱ-ㅎ]+)))(?=((?<!(\\/\\/.{0,100}))([가-힣ㄱ-ㅎ]+)))(?=((?<!(\\<\\!\\-\\-.{0,100}))([가-힣ㄱ-ㅎ]+)))(?=((?<!(\\<\\%\\-\\-.{0,100}))([가-힣ㄱ-ㅎ]+)))(?=((?<!(\\-.{0,100}))([가-힣ㄱ-ㅎ]+))).*");
 				
 		Path path = new File("/Users/joseph/eclipse-w/HangulExtractor/").toPath();
