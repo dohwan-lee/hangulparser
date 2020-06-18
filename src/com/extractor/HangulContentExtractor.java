@@ -1,15 +1,6 @@
 package com.extractor;
 
-import java.io.*;
-
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
+import com.google.common.io.Files;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.ibm.cloud.sdk.core.security.Authenticator;
@@ -22,11 +13,24 @@ import com.ibm.watson.language_translator.v3.util.Language;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.subtlelib.poi.api.sheet.SheetContext;
 import org.subtlelib.poi.api.workbook.WorkbookContext;
 import org.subtlelib.poi.impl.workbook.WorkbookContextFactory;
 
-import com.google.common.io.Files;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class HangulContentExtractor {
 
@@ -84,7 +88,7 @@ public class HangulContentExtractor {
                 .skipCell()
                 .header("파일 경로").setColumnWidth(80).setRowHeight(28)
                 .header("파일명").setColumnWidth(50)
-                .header("위치").setColumnWidth(10)
+                .header("위치(Line)").setColumnWidth(10)
                 .header("시작 위치").setColumnWidth(5)
                 .header("종료 위치").setColumnWidth(5)
                 .header("추출 문자열").setColumnWidth(70)
@@ -94,8 +98,12 @@ public class HangulContentExtractor {
 
 
 		// arg로 받을 param
-        //String isDir = "/Users/joseph/projects_all/ohprint-backoffice";
-        String isDir = "e:/devGits/ohprintme/ohprint-backoffice";
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-backoffice";
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-analytics";
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-ground-api";   // 아무 것도 없음
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-framework";       // 아무 것도 없음
+        //String isDir = "/Users/joseph/project_jp_all/ohprint-batch";
+        String isDir = "/Users/joseph/project_jp_all/ohprint-service-api";
 
         // 하위 디렉토리 
         for (File info : new File(isDir).listFiles()) {
@@ -122,12 +130,24 @@ public class HangulContentExtractor {
         // 하위의 모든 파일
         for (File info : FileUtils.listFiles(new File(isDir), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE)) {
             String[] strs = info.getName().split("\\.");
+            String path = info.getAbsolutePath();
+            if(path.contains("target")
+                    || path.contains("IBChart")
+                    || path.contains("test")
+                    || path.contains("IBSheet")) {
+                continue;
+            }
 
             if (strs.length > 1) {
 
-                if (((strs[1].contains("jsp") || strs[1].contains("properties")) && !strs[0].contains("target"))) {
+                if (((/*strs[1].contains("jsp") || strs[1].contains("properties") || strs[1].contains("java") || */strs[1].contains("xml")) || strs[1].contains("html"))) {
                     System.out.println("**************************************************************************");
                     System.out.println("| 파일명 : " + info.getAbsoluteFile());
+                    System.out.println("| 파일명 : " + info.getName());
+
+                    if("eventCondition.properties".equals(info.getName())) {    // ignore파일
+                        continue;
+                    }
 
                     List<FileInfo> findHangulList = KoreanFinder.findHangul(info.getAbsoluteFile());
 
@@ -176,6 +196,18 @@ public class HangulContentExtractor {
 				+ new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())
 				+".xlsx"));
 
+        int rowNum = sheetCtx.getNativeSheet().getLastRowNum();
+        for(int rowCnt = 0 ; rowNum < rowCnt; rowNum++) {
+            Row row = sheetCtx.getNativeSheet().getRow(rowCnt);
+            SXSSFRow.CellIterator cell = (SXSSFRow.CellIterator) row.cellIterator();
+            while(cell.hasNext()) {
+               Cell rowCell = cell.next();
+               System.out.print(rowCell.getDateCellValue());
+            }
+            System.out.println();
+        }
+
+
         // 하위의 모든 디렉토리
         for (File info : FileUtils.listFilesAndDirs(new File(isDir), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE)) {
             if (info.isDirectory()) {
@@ -183,8 +215,25 @@ public class HangulContentExtractor {
             }
         }
 
+    }
+
+    /**
+     * xlsx 파일의 line, starPos, endPos 읽고
+     * 해당 파일을 찾고, *.jsp 라면
+     * 해당 파일의 값의 위치를 찾는다.
+     * <spring:message code="propkey" text="default text" />
+     *
+     * 파일이 *.java라면
+     * messageSource.getMessage("propkey", null, locale) 을 사용한다
+     *
+     *
+     *  https://offbyone.tistory.com/24 참조
+     */
+    public static void writeProperties() {
 
     }
+
+
 
     public static String naverTranslate(String transStr, JsonParser parser) {
         String transTxt = "";
@@ -290,7 +339,7 @@ public class HangulContentExtractor {
     /**
      * https://glosbe.com/a-api
      *
-     * @param transTxt
+     * @param paramTxt
      * @return
      */
     public static String gloseTranslate(String paramTxt) {
